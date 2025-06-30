@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Product } from '../types';
+import { Product, Role } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import {
     getProductsBySeller,
@@ -9,10 +9,12 @@ import {
 } from '../services/firestore';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Repeat } from 'lucide-react';
+import { useDashboard } from '../contexts/DashboardContext';
 
 const SellerDashboard: React.FC = () => {
     const { user } = useAuth();
+    const { setCurrentDashboard } = useDashboard();
     const [products, setProducts] = useState<Product[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -69,13 +71,24 @@ const SellerDashboard: React.FC = () => {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <div>
+                <div className="flex flex-col">
                   <h1 className="text-4xl font-bold text-gray-900">Seller Dashboard</h1>
                   <p className="text-lg text-gray-600">Manage your products and listings.</p>
                 </div>
-                <Button onClick={() => handleOpenModal()} leftIcon={<Plus />}>
-                    Add New Item
-                </Button>
+                <div className="flex items-center gap-2">
+                    {user?.roles.includes(Role.BUYER) && (
+                        <Button
+                            onClick={() => setCurrentDashboard('BUYER')}
+                            variant="secondary"
+                            leftIcon={<Repeat size={16} />}
+                        >
+                            Switch to Buyer
+                        </Button>
+                    )}
+                    <Button onClick={() => handleOpenModal()} leftIcon={<Plus />}> 
+                        Add New Item
+                    </Button>
+                </div>
             </div>
 
             <div className="bg-white shadow-sm rounded-lg">
