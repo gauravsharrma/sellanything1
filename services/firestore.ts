@@ -85,25 +85,30 @@ export const deleteProduct = async (productId: string): Promise<boolean> => {
   }
 };
 
-export const loginUser = async (email: string): Promise<User> => {
-  const name = email.split('@')[0];
-  const querySnap = await getDocs(collection(firestore, 'users'));
-  const users = querySnap.docs
-    .map((d) => d.data() as User)
-    .filter((u) => u.email === email);
-  let user = users[0];
-  if (!user) {
-    const ref = await addDoc(collection(firestore, 'users'), {
-      email,
-      name,
-      profilePicUrl: `https://i.pravatar.cc/150?u=${Date.now()}`,
-      roles: [],
-    });
-    await updateDoc(ref, { id: ref.id });
-    const snap = await getDoc(ref);
-    user = snap.data() as User;
+export const loginUser = async (email: string): Promise<User | null> => {
+  try {
+    const name = email.split('@')[0];
+    const querySnap = await getDocs(collection(firestore, 'users'));
+    const users = querySnap.docs
+      .map((d) => d.data() as User)
+      .filter((u) => u.email === email);
+    let user = users[0];
+    if (!user) {
+      const ref = await addDoc(collection(firestore, 'users'), {
+        email,
+        name,
+        profilePicUrl: `https://i.pravatar.cc/150?u=${Date.now()}`,
+        roles: [],
+      });
+      await updateDoc(ref, { id: ref.id });
+      const snap = await getDoc(ref);
+      user = snap.data() as User;
+    }
+    return user;
+  } catch (e) {
+    console.error('loginUser failed', e);
+    return null;
   }
-  return user;
 };
 
 export const updateUser = async (user: User): Promise<User | null> => {
@@ -145,28 +150,43 @@ export const getCart = async (userId: string): Promise<Cart> => {
 };
 
 export const addToCart = async (userId: string, productId: string): Promise<Cart> => {
-  const cart = await getCart(userId);
-  if (!cart.productIds.includes(productId)) {
-    cart.productIds.push(productId);
+  try {
+    const cart = await getCart(userId);
+    if (!cart.productIds.includes(productId)) {
+      cart.productIds.push(productId);
+    }
+    await setDoc(doc(firestore, 'carts', userId), cart);
+    return cart;
+  } catch (e) {
+    console.error('addToCart failed', e);
+    return { userId, productIds: [] };
   }
-  await setDoc(doc(firestore, 'carts', userId), cart);
-  return cart;
 };
 
 export const removeFromCart = async (
   userId: string,
   productId: string,
 ): Promise<Cart> => {
-  const cart = await getCart(userId);
-  cart.productIds = cart.productIds.filter((id) => id !== productId);
-  await setDoc(doc(firestore, 'carts', userId), cart);
-  return cart;
+  try {
+    const cart = await getCart(userId);
+    cart.productIds = cart.productIds.filter((id) => id !== productId);
+    await setDoc(doc(firestore, 'carts', userId), cart);
+    return cart;
+  } catch (e) {
+    console.error('removeFromCart failed', e);
+    return { userId, productIds: [] };
+  }
 };
 
 export const clearCart = async (userId: string): Promise<Cart> => {
-  const cart = { userId, productIds: [] };
-  await setDoc(doc(firestore, 'carts', userId), cart);
-  return cart;
+  try {
+    const cart = { userId, productIds: [] };
+    await setDoc(doc(firestore, 'carts', userId), cart);
+    return cart;
+  } catch (e) {
+    console.error('clearCart failed', e);
+    return { userId, productIds: [] };
+  }
 };
 
 export const createOrder = async (
