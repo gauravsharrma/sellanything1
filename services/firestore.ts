@@ -9,7 +9,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { firestore } from '../firebase';
-import { Product, User, Order, Cart, OrderStatus, ProductStatus, Message } from '../types';
+import { Product, User, Order, Cart, OrderStatus, ProductStatus, Message, Role } from '../types';
 
 export const getProducts = async (): Promise<Product[]> => {
   try {
@@ -105,11 +105,15 @@ export const loginUser = async (email: string): Promise<User | null> => {
         email,
         name,
         profilePicUrl: `https://i.pravatar.cc/150?u=${Date.now()}`,
-        roles: [],
+        roles: [Role.BUYER, Role.SELLER],
       });
       await updateDoc(ref, { id: ref.id });
       const snap = await getDoc(ref);
       user = snap.data() as User;
+    } else if (!user.roles || user.roles.length < 2) {
+      const updated = { ...user, roles: [Role.BUYER, Role.SELLER] };
+      await updateDoc(doc(firestore, 'users', user.id), { roles: updated.roles });
+      user = updated;
     }
     return user;
   } catch (e) {
