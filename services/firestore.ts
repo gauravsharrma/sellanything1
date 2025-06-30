@@ -9,12 +9,14 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { firestore } from '../firebase';
-import { Product, User, Order, Cart } from '../types';
+import { Product, User, Order, Cart, OrderStatus, ProductStatus, Message } from '../types';
 
 export const getProducts = async (): Promise<Product[]> => {
   try {
     const snap = await getDocs(collection(firestore, 'products'));
-    return snap.docs.map((d) => d.data() as Product);
+    return snap.docs
+      .map((d) => d.data() as Product)
+      .filter((p) => p.status === ProductStatus.LIVE);
   } catch (e) {
     console.error('getProducts failed', e);
     return [];
@@ -50,7 +52,12 @@ export const addProduct = async (
   product: Omit<Product, 'id'>,
 ): Promise<Product | null> => {
   try {
-    const docRef = await addDoc(collection(firestore, 'products'), product);
+    const data = {
+      currency: 'USD',
+      status: ProductStatus.DRAFT,
+      ...product,
+    };
+    const docRef = await addDoc(collection(firestore, 'products'), data);
     await updateDoc(docRef, { id: docRef.id });
     const snap = await getDoc(docRef);
     return snap.data() as Product;
@@ -198,6 +205,7 @@ export const createOrder = async (
       buyerId,
       items,
       purchaseDate: new Date().toISOString(),
+      status: OrderStatus.PAID,
     });
     await updateDoc(ref, { id: ref.id });
     await deleteDoc(doc(firestore, 'carts', buyerId));
@@ -217,6 +225,51 @@ export const getOrdersByBuyer = async (buyerId: string): Promise<Order[]> => {
       .filter((o) => o.buyerId === buyerId);
   } catch (e) {
     console.error('getOrdersByBuyer failed', e);
+    return [];
+  }
+};
+
+export const getOrdersBySeller = async (sellerId: string): Promise<Order[]> => {
+  try {
+    const prodSnap = await getDocs(collection(firestore, 'products'));
+    const sellerProductIds = prodSnap.docs
+      .map((d) => d.data() as Product)
+      .filter((p) => p.sellerId === sellerId)
+      .map((p) => p.id);
+    const ordersSnap = await getDocs(collection(firestore, 'orders'));
+    return ordersSnap.docs
+      .map((d) => d.data() as Order)
+      .filter((o) => o.items.some((i) => sellerProductIds.includes(i.productId)));
+  } catch (e) {
+    console.error('getOrdersBySeller failed', e);
+    return [];
+  }
+};
+
+export const sendMessage = async (message: Omit<Message, 'id'>): Promise<Message | null> => {
+  try {
+    const ref = await addDoc(collection(firestore, 'messages'), message);
+    await updateDoc(ref, { id: ref.id });
+    const snap = await getDoc(ref);
+    return snap.data() as Message;
+  } catch (e) {
+    console.error('sendMessage failed', e);
+    return null;
+  }
+};
+
+export const getMessages = async (userId: string, otherUserId: string): Promise<Message[]> => {
+  try {
+    const snap = await getDocs(collection(firestore, 'messages'));
+    return snap.docs
+      .map((d) => d.data() as Message)
+      .filter((m) =>
+        (m.fromId === userId && m.toId === otherUserId) ||
+        (m.fromId === otherUserId && m.toId === userId)
+      )
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  } catch (e) {
+    console.error('getMessages failed', e);
     return [];
   }
 };
