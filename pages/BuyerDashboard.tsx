@@ -1,6 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Product, Order } from '../types';
-import { db } from '../services/db';
+import {
+    getProducts,
+    getOrdersByBuyer,
+    addToCart as addToCartService,
+    createOrder,
+    getProductById,
+} from '../services/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import ProductCard from '../components/ProductCard';
 import { Search, X, ShoppingBag } from 'lucide-react';
@@ -9,32 +15,40 @@ const BuyerDashboard: React.FC = () => {
     const { user } = useAuth();
     const [products, setProducts] = useState<Product[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [priceFilter, setPriceFilter] = useState('all');
     const [activeTab, setActiveTab] = useState('browse');
 
     useEffect(() => {
-        setProducts(db.getProducts());
-        if (user) {
-            setOrders(db.getOrdersByBuyer(user.id));
-        }
+        const load = async () => {
+            const prods = await getProducts();
+            setProducts(prods);
+            if (user) {
+                const ords = await getOrdersByBuyer(user.id);
+                setOrders(ords);
+            }
+            setLoading(false);
+        };
+        load();
     }, [user]);
 
-    const handleAddToCart = (productId: string) => {
+    const handleAddToCart = async (productId: string) => {
         if (user) {
-            db.addToCart(user.id, productId);
+            await addToCartService(user.id, productId);
             alert('Item added to cart!');
         }
     };
 
-    const handleBuyNow = (productId: string) => {
+    const handleBuyNow = async (productId: string) => {
         if (user) {
-            const product = db.getProductById(productId);
+            const product = await getProductById(productId);
             if (product) {
-                db.createOrder(user.id, [{ productId: product.id, price: product.price }]);
+                await createOrder(user.id, [{ productId: product.id, price: product.price }]);
                 alert('Purchase successful!');
-                setOrders(db.getOrdersByBuyer(user.id));
+                const ords = await getOrdersByBuyer(user.id);
+                setOrders(ords);
             }
         }
     };
@@ -101,7 +115,7 @@ const BuyerDashboard: React.FC = () => {
     );
 
     const renderPurchasesTab = () => {
-         const getProductDetails = (productId: string) => db.getProductById(productId);
+         const getProductDetails = (productId: string) => products.find(p => p.id === productId);
 
         return (
             <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -140,6 +154,9 @@ const BuyerDashboard: React.FC = () => {
         );
     };
 
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div>
