@@ -2,12 +2,12 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBtF1Npm9bDgLdLzmmhOTcFQuB8YParqsM",
+  authDomain: "sell-everything-fdd5f.firebaseapp.com",
+  projectId: "sell-everything-fdd5f",
+  storageBucket: "sell-everything-fdd5f.firebasestorage.app",
+  messagingSenderId: "275877885616",
+  appId: "1:275877885616:web:9156b77fbe802f011aad75"
 };
 
 const app = initializeApp(firebaseConfig);
