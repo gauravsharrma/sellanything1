@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Product, Order } from '../types';
+import { Product, Order, Role } from '../types';
 import {
     getProducts,
     getOrdersByBuyer,
@@ -8,11 +8,14 @@ import {
     getProductById,
 } from '../services/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useDashboard } from '../contexts/DashboardContext';
 import ProductCard from '../components/ProductCard';
-import { Search, X, ShoppingBag } from 'lucide-react';
+import Button from '../components/Button';
+import { Search, Repeat } from 'lucide-react';
 
 const BuyerDashboard: React.FC = () => {
     const { user } = useAuth();
+    const { setCurrentDashboard } = useDashboard();
     const [products, setProducts] = useState<Product[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
@@ -161,8 +164,21 @@ const BuyerDashboard: React.FC = () => {
     return (
         <div>
             <div className="mb-6">
-                <h1 className="text-4xl font-bold text-gray-900">Buyer Dashboard</h1>
-                <p className="text-lg text-gray-600">Discover and purchase amazing products.</p>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-4xl font-bold text-gray-900">Buyer Dashboard</h1>
+                        <p className="text-lg text-gray-600">Discover and purchase amazing products.</p>
+                    </div>
+                    {user?.roles.includes(Role.SELLER) && (
+                        <Button
+                            onClick={() => setCurrentDashboard('SELLER')}
+                            variant="secondary"
+                            leftIcon={<Repeat size={16} />}
+                        >
+                            Switch to Seller
+                        </Button>
+                    )}
+                </div>
             </div>
              <div className="border-b border-gray-200 mb-6">
                 <nav className="-mb-px flex space-x-8" aria-label="Tabs">
