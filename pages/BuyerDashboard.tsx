@@ -4,6 +4,9 @@ import {
     getProducts,
     getOrdersByBuyer,
     addToCart as addToCartService,
+    getCart,
+    removeFromCart,
+    clearCart,
     createOrder,
     getProductById,
 } from '../services/firestore';
@@ -18,6 +21,7 @@ const BuyerDashboard: React.FC = () => {
     const { setCurrentDashboard } = useDashboard();
     const [products, setProducts] = useState<Product[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
+    const [cart, setCart] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -31,6 +35,9 @@ const BuyerDashboard: React.FC = () => {
             if (user) {
                 const ords = await getOrdersByBuyer(user.id);
                 setOrders(ords);
+                const cartData = await getCart(user.id);
+                const cartProducts = await Promise.all(cartData.productIds.map(id => getProductById(id))) as (Product | null)[];
+                setCart(cartProducts.filter(Boolean) as Product[]);
             }
             setLoading(false);
         };
@@ -41,6 +48,10 @@ const BuyerDashboard: React.FC = () => {
         if (user) {
             await addToCartService(user.id, productId);
             alert('Item added to cart!');
+            const product = await getProductById(productId);
+            if (product) {
+                setCart(prev => [...prev, product]);
+            }
         }
     };
 
@@ -52,7 +63,28 @@ const BuyerDashboard: React.FC = () => {
                 alert('Purchase successful!');
                 const ords = await getOrdersByBuyer(user.id);
                 setOrders(ords);
+                const cartData = await getCart(user.id);
+                const cartProducts = await Promise.all(cartData.productIds.map(id => getProductById(id))) as (Product | null)[];
+                setCart(cartProducts.filter(Boolean) as Product[]);
             }
+        }
+    };
+
+    const handleRemoveFromCart = async (productId: string) => {
+        if (user) {
+            await removeFromCart(user.id, productId);
+            setCart(prev => prev.filter(p => p.id !== productId));
+        }
+    };
+
+    const handleCheckout = async () => {
+        if (user && cart.length > 0) {
+            const items = cart.map(p => ({ productId: p.id, price: p.price }));
+            await createOrder(user.id, items);
+            alert('Order placed!');
+            setCart([]);
+            const ords = await getOrdersByBuyer(user.id);
+            setOrders(ords);
         }
     };
     
@@ -131,7 +163,10 @@ const BuyerDashboard: React.FC = () => {
                             <div key={order.id} className="border border-gray-200 rounded-lg p-4">
                                 <div className="flex justify-between items-center mb-2">
                                     <p className="font-semibold text-gray-700">Order #{order.id.slice(-6)}</p>
-                                    <p className="text-sm text-gray-500">{new Date(order.purchaseDate).toLocaleDateString()}</p>
+                                    <div className="text-sm text-gray-500 flex gap-2 items-center">
+                                        <span>{new Date(order.purchaseDate).toLocaleDateString()}</span>
+                                        <span className="uppercase">{order.status}</span>
+                                    </div>
                                 </div>
                                 <ul className="divide-y divide-gray-100">
                                     {order.items.map(item => {
@@ -156,6 +191,33 @@ const BuyerDashboard: React.FC = () => {
             </div>
         );
     };
+
+    const renderCartTab = () => (
+        <div className="bg-white p-6 rounded-lg shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Cart</h2>
+            {cart.length === 0 ? (
+                <p className="text-gray-500">Your cart is empty.</p>
+            ) : (
+                <div className="space-y-4">
+                    {cart.map(item => (
+                        <div key={item.id} className="flex justify-between items-center border border-gray-200 rounded-lg p-3">
+                            <div className="flex items-center gap-3">
+                                <img src={item.imageUrl} alt={item.name} className="h-12 w-12 rounded-md object-cover" />
+                                <div>
+                                    <p className="font-medium text-gray-800">{item.name}</p>
+                                    <p className="text-sm text-gray-600">${item.price.toFixed(2)}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => handleRemoveFromCart(item.id)} className="text-red-600 text-sm">Remove</button>
+                        </div>
+                    ))}
+                    <div className="text-right">
+                        <Button onClick={handleCheckout}>Checkout</Button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 
     if (loading) {
         return <div>Loading...</div>;
@@ -185,12 +247,17 @@ const BuyerDashboard: React.FC = () => {
                     <button onClick={() => setActiveTab('browse')} className={`${activeTab === 'browse' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                         Browse Products
                     </button>
+                    <button onClick={() => setActiveTab('cart')} className={`${activeTab === 'cart' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
+                        Cart
+                    </button>
                     <button onClick={() => setActiveTab('purchases')} className={`${activeTab === 'purchases' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}>
                         My Purchases
                     </button>
                 </nav>
             </div>
-            {activeTab === 'browse' ? renderBrowseTab() : renderPurchasesTab()}
+            {activeTab === 'browse' && renderBrowseTab()}
+            {activeTab === 'cart' && renderCartTab()}
+            {activeTab === 'purchases' && renderPurchasesTab()}
         </div>
     );
 };
