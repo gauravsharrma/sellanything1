@@ -1,6 +1,10 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
 import { User, Role } from '../types';
-import { db } from '../services/db';
+import {
+    loginUser as loginUserService,
+    getUserById,
+    updateUser as updateUserService,
+} from '../services/firestore';
 
 interface AuthContextType {
     user: User | null;
@@ -18,39 +22,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        try {
-            const storedUserId = localStorage.getItem('sellAnything_userId');
-            if (storedUserId) {
-                const loggedInUser = db.getUserById(JSON.parse(storedUserId));
-                if (loggedInUser) {
-                    setUser(loggedInUser);
-                }
+        const load = async () => {
+            try {
+                // In a real app this would use Firebase Auth
+            } finally {
+                setLoading(false);
             }
-        } catch(e) {
-            console.error("Failed to parse user from storage", e);
-            localStorage.removeItem('sellAnything_userId');
-        } finally {
-            setLoading(false);
-        }
+        };
+        load();
     }, []);
 
-    const login = useCallback((email: string) => {
+    const login = useCallback(async (email: string) => {
         setLoading(true);
-        const loggedInUser = db.loginUser(email);
+        const loggedInUser = await loginUserService(email);
         setUser(loggedInUser);
-        localStorage.setItem('sellAnything_userId', JSON.stringify(loggedInUser.id));
         setLoading(false);
     }, []);
 
     const logout = useCallback(() => {
         setUser(null);
-        localStorage.removeItem('sellAnything_userId');
     }, []);
 
     const setUserRoles = useCallback((roles: Role[]) => {
         if (user) {
             const updatedUser = { ...user, roles };
-            db.updateUser(updatedUser);
+            updateUserService(updatedUser);
             setUser(updatedUser);
         }
     }, [user]);

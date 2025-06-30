@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Product, User } from '../types';
-import { db } from '../services/db';
+import { getUserById } from '../services/firestore';
 import Button from './Button';
 import { ShoppingCart, DollarSign, User as UserIcon } from 'lucide-react';
 
@@ -14,10 +14,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onBuyNo
     const [seller, setSeller] = useState<User | null>(null);
 
     useEffect(() => {
-        const sellerData = db.getUserById(product.sellerId);
-        if (sellerData) {
-            setSeller(sellerData);
-        }
+        const load = async () => {
+            const sellerData = await getUserById(product.sellerId);
+            if (sellerData) {
+                setSeller(sellerData);
+            }
+        };
+        load();
     }, [product.sellerId]);
 
     return (

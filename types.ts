@@ -32,3 +32,7 @@ export interface Cart {
     userId: string;
     productIds: string[];
 }
+
+export interface CartItem {
+    productId: string;
+}

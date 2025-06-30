@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/db';
+import {
+    getProductsBySeller,
+    addProduct as addProductService,
+    updateProduct as updateProductService,
+    deleteProduct as deleteProductService,
+} from '../services/firestore';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import { Plus, Edit, Trash2 } from 'lucide-react';
@@ -11,11 +16,17 @@ const SellerDashboard: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (user) {
-            setProducts(db.getProductsBySeller(user.id));
-        }
+        const load = async () => {
+            if (user) {
+                const prods = await getProductsBySeller(user.id);
+                setProducts(prods);
+            }
+            setLoading(false);
+        };
+        load();
     }, [user]);
 
     const handleOpenModal = (product: Product | null = null) => {
@@ -28,26 +39,32 @@ const SellerDashboard: React.FC = () => {
         setIsModalOpen(false);
     };
 
-    const handleSaveProduct = (formData: Omit<Product, 'id' | 'sellerId'>) => {
+    const handleSaveProduct = async (formData: Omit<Product, 'id' | 'sellerId'>) => {
         if (user) {
             if (editingProduct) {
-                db.updateProduct(editingProduct.id, formData);
+                await updateProductService(editingProduct.id, formData);
             } else {
-                db.addProduct({ ...formData, sellerId: user.id });
+                await addProductService({ ...formData, sellerId: user.id });
             }
-            setProducts(db.getProductsBySeller(user.id));
+            const prods = await getProductsBySeller(user.id);
+            setProducts(prods);
             handleCloseModal();
         }
     };
 
-    const handleDeleteProduct = (productId: string) => {
+    const handleDeleteProduct = async (productId: string) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             if (user) {
-                db.deleteProduct(productId);
-                setProducts(db.getProductsBySeller(user.id));
+                await deleteProductService(productId);
+                const prods = await getProductsBySeller(user.id);
+                setProducts(prods);
             }
         }
     };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div>
