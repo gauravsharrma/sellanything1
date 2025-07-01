@@ -40,32 +40,37 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
       return;
     }
     const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
-    let map: google.maps.Map | null = null;
-    let marker: google.maps.Marker | null = null;
+    let MapClass: any = null;
+    let MarkerClass: any = null;
+    let AutocompleteClass: any = null;
+    let map: any = null;
+    let marker: any = null;
     const init = async () => {
       await loadScript(src);
       if (!mapRef.current || !inputRef.current || !window.google?.maps) return;
       // ensure libraries are loaded when using loading=async
       if (window.google.maps.importLibrary) {
-        await window.google.maps.importLibrary('maps');
-        await window.google.maps.importLibrary('places');
-        await window.google.maps.importLibrary('marker');
+        ({ Map: MapClass } = await window.google.maps.importLibrary('maps'));
+        ({ Marker: MarkerClass } = await window.google.maps.importLibrary('marker'));
+        ({ Autocomplete: AutocompleteClass } = await window.google.maps.importLibrary('places'));
+      } else {
+        MapClass = window.google.maps.Map;
+        MarkerClass = window.google.maps.Marker;
+        AutocompleteClass = window.google.maps.places.Autocomplete;
       }
       const center = {
         lat: parseFloat(lat || '0') || 0,
         lng: parseFloat(lng || '0') || 0,
       };
-      map = new window.google.maps.Map(mapRef.current, {
+      map = new MapClass(mapRef.current, {
         center,
         zoom: 8,
       });
-      marker = new window.google.maps.Marker({ map });
+      marker = new MarkerClass({ map });
       if (lat && lng) {
         marker.setPosition(center);
       }
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        inputRef.current!,
-      );
+      const autocomplete = new AutocompleteClass(inputRef.current!);
       if (address) inputRef.current!.value = address;
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
