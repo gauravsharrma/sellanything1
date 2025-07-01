@@ -13,25 +13,18 @@ interface LocationPickerProps {
   onChange: (address: string, lat: string, lng: string) => void;
 }
 
-const loadScript = (src: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const existingScript = document.querySelector(`script[src="${src}"]`);
-    if (existingScript) {
-      if ((existingScript as HTMLScriptElement).readyState === 'complete') {
-        resolve();
-        return;
-      }
-      existingScript.addEventListener('load', () => resolve());
-      return;
-    }
+const loadGoogleMaps = async (apiKey: string) => {
+  const existing = document.querySelector(`script[src*="maps.googleapis.com/maps/api/js"]`);
+  if (existing) return;
 
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    script.defer = true;
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+  script.async = true;
+  document.head.appendChild(script);
+
+  return new Promise<void>((resolve, reject) => {
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google Maps script.'));
-    document.body.appendChild(script);
+    script.onerror = () => reject(new Error('Google Maps failed to load'));
   });
 };
 
@@ -46,20 +39,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
       return;
     }
 
-    const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-
-    let map: google.maps.Map;
-    let marker: google.maps.Marker;
-    let autocomplete: google.maps.places.Autocomplete;
-
-    const initMap = async () => {
+    const init = async () => {
       try {
-        await loadScript(src);
-
-        if (!window.google || !window.google.maps || !window.google.maps.places) {
-          console.error('Google Maps or Places library failed to load');
-          return;
-        }
+        await loadGoogleMaps(apiKey);
+        const { Map } = (await window.google.maps.importLibrary('maps')) as google.maps.MapsLibrary;
+        const { AdvancedMarkerElement } = (await window.google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
+        const { PlaceAutocompleteElement } = (await window.google.maps.importLibrary('places')) as google.maps.PlacesLibrary;
 
         if (!mapRef.current || !inputRef.current) return;
 
@@ -68,38 +53,39 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
           lng: parseFloat(lng || '0') || 0,
         };
 
-        map = new window.google.maps.Map(mapRef.current, {
+        const map = new Map(mapRef.current, {
           center,
           zoom: 8,
         });
 
-        marker = new window.google.maps.Marker({
-          position: lat && lng ? center : undefined,
+        const marker = new AdvancedMarkerElement({
           map,
+          position: lat && lng ? center : undefined,
         });
 
-        autocomplete = new window.google.maps.places.Autocomplete(inputRef.current);
+        const autocomplete = new PlaceAutocompleteElement({
+          inputElement: inputRef.current,
+        });
 
         if (address) inputRef.current.value = address;
 
-        autocomplete.addListener('place_changed', () => {
+        autocomplete.addListener('gmp-placechange', () => {
           const place = autocomplete.getPlace();
-          if (!place.geometry || !place.geometry.location) return;
+          if (!place?.geometry?.location) return;
 
           const location = place.geometry.location;
           const formattedAddress = place.formatted_address || '';
 
-          onChange(formattedAddress, location.lat().toString(), location.lng().toString());
-
+          onChange(formattedAddress, location.lat(), location.lng());
           map.setCenter(location);
-          marker.setPosition(location);
+          marker.position = location;
         });
-      } catch (error) {
-        console.error('Google Maps initialization failed:', error);
+      } catch (err) {
+        console.error('Google Maps initialization failed', err);
       }
     };
 
-    initMap();
+    init();
   }, [address, lat, lng, onChange]);
 
   return (
