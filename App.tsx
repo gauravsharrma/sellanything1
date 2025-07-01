@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import BuyerDashboard from './pages/BuyerDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import ProductDetailPage from './pages/ProductDetailPage';
+import SellerProfilePage from './pages/SellerProfilePage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Modal from './components/Modal';
@@ -78,6 +79,7 @@ const Main: React.FC = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
           <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/seller/:id" element={<SellerProfilePage />} />
           <Route path="*" element={renderHome()} />
         </Routes>
       </main>
