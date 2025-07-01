@@ -9,7 +9,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { firestore } from '../firebase';
-import { Product, User, Order, Cart, OrderStatus, ProductStatus, Message, Role } from '../types';
+import { Product, User, ProductStatus, Message, Role } from '../types';
 
 export const getProducts = async (): Promise<Product[]> => {
   try {
@@ -144,111 +144,6 @@ export const getUserById = async (userId: string): Promise<User | null> => {
   }
 };
 
-export const getCart = async (userId: string): Promise<Cart> => {
-  try {
-    const ref = doc(firestore, 'carts', userId);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      return snap.data() as Cart;
-    }
-    const cart: Cart = { userId, productIds: [] };
-    await setDoc(ref, cart);
-    return cart;
-  } catch (e) {
-    console.error('getCart failed', e);
-    return { userId, productIds: [] };
-  }
-};
-
-export const addToCart = async (userId: string, productId: string): Promise<Cart> => {
-  try {
-    const cart = await getCart(userId);
-    if (!cart.productIds.includes(productId)) {
-      cart.productIds.push(productId);
-    }
-    await setDoc(doc(firestore, 'carts', userId), cart);
-    return cart;
-  } catch (e) {
-    console.error('addToCart failed', e);
-    return { userId, productIds: [] };
-  }
-};
-
-export const removeFromCart = async (
-  userId: string,
-  productId: string,
-): Promise<Cart> => {
-  try {
-    const cart = await getCart(userId);
-    cart.productIds = cart.productIds.filter((id) => id !== productId);
-    await setDoc(doc(firestore, 'carts', userId), cart);
-    return cart;
-  } catch (e) {
-    console.error('removeFromCart failed', e);
-    return { userId, productIds: [] };
-  }
-};
-
-export const clearCart = async (userId: string): Promise<Cart> => {
-  try {
-    const cart = { userId, productIds: [] };
-    await setDoc(doc(firestore, 'carts', userId), cart);
-    return cart;
-  } catch (e) {
-    console.error('clearCart failed', e);
-    return { userId, productIds: [] };
-  }
-};
-
-export const createOrder = async (
-  buyerId: string,
-  items: { productId: string; price: number }[],
-): Promise<Order | null> => {
-  try {
-    const ref = await addDoc(collection(firestore, 'orders'), {
-      buyerId,
-      items,
-      purchaseDate: new Date().toISOString(),
-      status: OrderStatus.PAID,
-    });
-    await updateDoc(ref, { id: ref.id });
-    await deleteDoc(doc(firestore, 'carts', buyerId));
-    const snap = await getDoc(ref);
-    return snap.data() as Order;
-  } catch (e) {
-    console.error('createOrder failed', e);
-    return null;
-  }
-};
-
-export const getOrdersByBuyer = async (buyerId: string): Promise<Order[]> => {
-  try {
-    const snap = await getDocs(collection(firestore, 'orders'));
-    return snap.docs
-      .map((d) => d.data() as Order)
-      .filter((o) => o.buyerId === buyerId);
-  } catch (e) {
-    console.error('getOrdersByBuyer failed', e);
-    return [];
-  }
-};
-
-export const getOrdersBySeller = async (sellerId: string): Promise<Order[]> => {
-  try {
-    const prodSnap = await getDocs(collection(firestore, 'products'));
-    const sellerProductIds = prodSnap.docs
-      .map((d) => d.data() as Product)
-      .filter((p) => p.sellerId === sellerId)
-      .map((p) => p.id);
-    const ordersSnap = await getDocs(collection(firestore, 'orders'));
-    return ordersSnap.docs
-      .map((d) => d.data() as Order)
-      .filter((o) => o.items.some((i) => sellerProductIds.includes(i.productId)));
-  } catch (e) {
-    console.error('getOrdersBySeller failed', e);
-    return [];
-  }
-};
 
 export const sendMessage = async (message: Omit<Message, 'id'>): Promise<Message | null> => {
   try {
