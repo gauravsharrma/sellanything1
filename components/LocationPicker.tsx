@@ -34,7 +34,12 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      console.error('Google Maps API key not provided');
+      return;
+    }
+    const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
     let map: google.maps.Map | null = null;
     let marker: google.maps.Marker | null = null;
     loadScript(src).then(() => {

@@ -4,18 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SellAnything.com</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
-            }
-          }
-        }
-      }
-    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+    <style>
+      .bg-primary-50 { background-color: #eff6ff; }
+      .bg-primary-100 { background-color: #dbeafe; }
+      .bg-primary-200 { background-color: #bfdbfe; }
+      .bg-primary-300 { background-color: #93c5fd; }
+      .bg-primary-400 { background-color: #60a5fa; }
+      .bg-primary-500 { background-color: #3b82f6; }
+      .bg-primary-600 { background-color: #2563eb; }
+      .bg-primary-700 { background-color: #1d4ed8; }
+      .bg-primary-800 { background-color: #1e40af; }
+      .bg-primary-900 { background-color: #1e3a8a; }
+      .bg-primary-950 { background-color: #172554; }
+      .text-primary-50 { color: #eff6ff; }
+      .text-primary-100 { color: #dbeafe; }
+      .text-primary-200 { color: #bfdbfe; }
+      .text-primary-300 { color: #93c5fd; }
+      .text-primary-400 { color: #60a5fa; }
+      .text-primary-500 { color: #3b82f6; }
+      .text-primary-600 { color: #2563eb; }
+      .text-primary-700 { color: #1d4ed8; }
+      .text-primary-800 { color: #1e40af; }
+      .text-primary-900 { color: #1e3a8a; }
+      .text-primary-950 { color: #172554; }
+      .border-primary-500 { border-color: #3b82f6; }
+      .focus\:border-primary-500:focus { border-color: #3b82f6; }
+      .focus\:ring-primary-500:focus { --tw-ring-color: #3b82f6; }
+      .hover\:bg-primary-700:hover { background-color: #1d4ed8; }
+    </style>
   <script type="importmap">
 {
   "imports": {
