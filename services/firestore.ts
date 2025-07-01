@@ -147,7 +147,9 @@ export const getUserById = async (userId: string): Promise<User | null> => {
 
 export const sendMessage = async (message: Omit<Message, 'id'>): Promise<Message | null> => {
   try {
-    const ref = await addDoc(collection(firestore, 'messages'), message);
+    const data: Record<string, any> = { ...message };
+    Object.keys(data).forEach((k) => data[k] === undefined && delete data[k]);
+    const ref = await addDoc(collection(firestore, 'messages'), data);
     await updateDoc(ref, { id: ref.id });
     const snap = await getDoc(ref);
     return snap.data() as Message;
