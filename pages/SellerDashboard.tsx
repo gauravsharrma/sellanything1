@@ -81,15 +81,6 @@ const SellerDashboard: React.FC = () => {
                   <p className="text-lg text-gray-600">Manage your products and listings.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {user?.roles.includes(Role.BUYER) && (
-                        <Button
-                            onClick={() => setCurrentDashboard('BUYER')}
-                            variant="secondary"
-                            leftIcon={<Repeat size={16} />}
-                        >
-                            Switch to Buyer
-                        </Button>
-                    )}
                     <Button onClick={() => handleOpenModal()} leftIcon={<Plus />}> 
                         Add New Item
                     </Button>
