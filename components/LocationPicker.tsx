@@ -39,7 +39,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
       console.error('Google Maps API key not provided');
       return;
     }
-    const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
+    const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
     let MapClass: any = null;
     let MarkerClass: any = null;
     let AutocompleteClass: any = null;
