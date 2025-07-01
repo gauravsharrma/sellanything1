@@ -231,15 +231,6 @@ const BuyerDashboard: React.FC = () => {
                         <h1 className="text-4xl font-bold text-gray-900">Buyer Dashboard</h1>
                         <p className="text-lg text-gray-600">Discover and purchase amazing products.</p>
                     </div>
-                    {user?.roles.includes(Role.SELLER) && (
-                        <Button
-                            onClick={() => setCurrentDashboard('SELLER')}
-                            variant="secondary"
-                            leftIcon={<Repeat size={16} />}
-                        >
-                            Switch to Seller
-                        </Button>
-                    )}
                 </div>
             </div>
              <div className="border-b border-gray-200 mb-6">
