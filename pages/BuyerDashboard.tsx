@@ -7,6 +7,7 @@ import { Search } from 'lucide-react';
 import Modal from '../components/Modal';
 import MessagingPage from './MessagingPage';
 import MessagesScreen from './MessagesScreen';
+import LocationPicker from '../components/LocationPicker';
 
 const toRad = (value: number) => (value * Math.PI) / 180;
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -29,6 +30,10 @@ const BuyerDashboard: React.FC = () => {
     const [priceFilter, setPriceFilter] = useState('all');
     const [distanceFilter, setDistanceFilter] = useState('all');
     const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
+    const [locationAddress, setLocationAddress] = useState('');
+    const [locationLat, setLocationLat] = useState('');
+    const [locationLng, setLocationLng] = useState('');
+    const [showLocationModal, setShowLocationModal] = useState(false);
     const [messageInfo, setMessageInfo] = useState<{sellerId: string; productId: string} | null>(null);
     const [showMessages, setShowMessages] = useState(false);
 
@@ -45,6 +50,8 @@ const BuyerDashboard: React.FC = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
                 setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                setLocationLat(pos.coords.latitude.toString());
+                setLocationLng(pos.coords.longitude.toString());
             });
         }
     }, []);
@@ -91,7 +98,7 @@ const BuyerDashboard: React.FC = () => {
                 </div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm mb-6 sticky top-[85px] z-40">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                         <input
@@ -130,11 +137,20 @@ const BuyerDashboard: React.FC = () => {
                         <option value="5">&lt; 5 km</option>
                         <option value="10">&lt; 10 km</option>
                     </select>
+                    <Button variant="secondary" onClick={() => setShowLocationModal(true)} className="w-full">
+                        {userLocation ? 'Change Location' : 'Set Location'}
+                    </Button>
                 </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredProducts.map(p => (
-                    <ProductCard key={p.product.id} product={p.product} distanceKm={p.distance} onMessageSeller={(sellerId, productId) => setMessageInfo({ sellerId, productId })} />
+                    <ProductCard
+                        key={p.product.id}
+                        product={p.product}
+                        distanceKm={p.distance}
+                        onMessageSeller={(sellerId, productId) => setMessageInfo({ sellerId, productId })}
+                        onCategoryClick={(cat) => setCategoryFilter(cat)}
+                    />
                 ))}
             </div>
             {filteredProducts.length === 0 && (
@@ -151,6 +167,31 @@ const BuyerDashboard: React.FC = () => {
             {showMessages && (
                 <Modal isOpen={true} onClose={() => setShowMessages(false)} title="Messages">
                     <MessagesScreen />
+                </Modal>
+            )}
+            {showLocationModal && (
+                <Modal isOpen={true} onClose={() => setShowLocationModal(false)} title="Select Location">
+                    <div className="p-4 space-y-4">
+                        <LocationPicker
+                            address={locationAddress}
+                            lat={locationLat}
+                            lng={locationLng}
+                            onChange={(a, la, lo) => {
+                                setLocationAddress(a);
+                                setLocationLat(la);
+                                setLocationLng(lo);
+                            }}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="secondary" onClick={() => setShowLocationModal(false)}>Cancel</Button>
+                            <Button onClick={() => {
+                                if (locationLat && locationLng) {
+                                    setUserLocation({ lat: parseFloat(locationLat), lng: parseFloat(locationLng) });
+                                }
+                                setShowLocationModal(false);
+                            }}>Save</Button>
+                        </div>
+                    </div>
                 </Modal>
             )}
         </div>

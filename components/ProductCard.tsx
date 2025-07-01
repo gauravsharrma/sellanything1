@@ -3,16 +3,19 @@ import { Product, User } from '../types';
 import { getUserById } from '../services/firestore';
 import { DollarSign, User as UserIcon } from 'lucide-react';
 import Button from './Button';
-import { Link } from 'react-router-dom';
+import Modal from './Modal';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface ProductCardProps {
     product: Product;
     distanceKm?: number;
     onMessageSeller?: (sellerId: string, productId: string) => void;
+    onCategoryClick?: (category: string) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, distanceKm, onMessageSeller }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, distanceKm, onMessageSeller, onCategoryClick }) => {
     const [seller, setSeller] = useState<User | null>(null);
+    const [showImageModal, setShowImageModal] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -24,17 +27,44 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, distanceKm, onMessag
         load();
     }, [product.sellerId]);
 
+    const navigate = useNavigate();
+
     return (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-transform duration-300 hover:shadow-xl hover:-translate-y-1">
-            <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+        <div
+            className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col transition-transform duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+            onClick={() => navigate(`/product/${product.id}`)}
+        >
+            <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="w-full h-48 object-cover cursor-pointer"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setShowImageModal(true);
+                }}
+            />
             <div className="p-4 flex flex-col flex-grow">
-                <span className="text-xs font-semibold text-primary-600 uppercase tracking-wide">{product.category}</span>
+                <span
+                    className="text-xs font-semibold text-primary-600 uppercase tracking-wide cursor-pointer"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onCategoryClick && onCategoryClick(product.category);
+                    }}
+                >
+                    {product.category}
+                </span>
                 <h3 className="text-lg font-bold text-gray-800 mt-1 mb-2 flex-grow">{product.name}</h3>
-                
+
                 {seller && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
                         <UserIcon size={14} />
-                        <span>Sold by {seller.name}</span>
+                        <Link
+                            to={`/seller/${seller.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="hover:underline"
+                        >
+                            Sold by {seller.name}
+                        </Link>
                     </div>
                 )}
 
@@ -53,17 +83,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, distanceKm, onMessag
                 )}
 
                 {onMessageSeller && (
-                    <Button size="sm" onClick={() => onMessageSeller(product.sellerId, product.id)}>
+                    <Button
+                        size="sm"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onMessageSeller(product.sellerId, product.id);
+                        }}
+                    >
                         Message Seller
                     </Button>
                 )}
 
-                <Link to={`/product/${product.id}`} className="text-primary-600 hover:underline text-sm mt-2">
-                    View Details
-                </Link>
-
                 <div className="mt-auto" />
             </div>
+
+            {showImageModal && (
+                <Modal isOpen={true} onClose={() => setShowImageModal(false)} title={product.name}>
+                    <img src={product.imageUrl} alt={product.name} className="max-h-[80vh] mx-auto" />
+                </Modal>
+            )}
         </div>
     );
 };

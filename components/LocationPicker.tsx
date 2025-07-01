@@ -46,8 +46,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
         await loadGoogleMaps(apiKey);
 
         const { Map } = (await window.google.maps.importLibrary('maps')) as google.maps.MapsLibrary;
-        const { AdvancedMarkerElement } = (await window.google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
-        const { PlaceAutocompleteElement } = (await window.google.maps.importLibrary('places')) as google.maps.PlacesLibrary;
+        const { Marker } = (await window.google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
+        await window.google.maps.importLibrary('places');
 
         if (!mapRef.current || !inputRef.current) return;
 
@@ -62,18 +62,15 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
           mapId,
         });
 
-        const marker = new AdvancedMarkerElement({
+        const marker = new Marker({
           map,
           position: lat && lng ? center : undefined,
         });
-
-        const autocomplete = new PlaceAutocompleteElement({
-          inputElement: inputRef.current,
-        });
+        const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current);
 
         if (address) inputRef.current.value = address;
 
-        autocomplete.addEventListener('gmp-placechange', () => {
+        autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
           if (!place?.geometry?.location) return;
 
