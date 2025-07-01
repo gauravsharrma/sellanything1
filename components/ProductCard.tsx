@@ -3,6 +3,7 @@ import { Product, User } from '../types';
 import { getUserById } from '../services/firestore';
 import { DollarSign, User as UserIcon } from 'lucide-react';
 import Button from './Button';
+import { Link } from 'react-router-dom';
 
 interface ProductCardProps {
     product: Product;
@@ -56,6 +57,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, distanceKm, onMessag
                         Message Seller
                     </Button>
                 )}
+
+                <Link to={`/product/${product.id}`} className="text-primary-600 hover:underline text-sm mt-2">
+                    View Details
+                </Link>
 
                 <div className="mt-auto" />
             </div>
