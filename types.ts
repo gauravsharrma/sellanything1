@@ -54,4 +54,8 @@ export interface Message {
     text: string;
     productId?: string;
     createdAt: string;
+    editedAt?: string;
+    history?: string[];
+    deleted?: boolean;
+    deletedAt?: string;
 }

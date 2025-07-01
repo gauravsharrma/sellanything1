@@ -10,6 +10,8 @@ import {
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import MessagesScreen from './MessagesScreen';
+import LocationPicker from '../components/LocationPicker';
 
 const SellerDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -17,6 +19,7 @@ const SellerDashboard: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showMessages, setShowMessages] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -74,6 +77,7 @@ const SellerDashboard: React.FC = () => {
                   <p className="text-lg text-gray-600">Manage your products and listings.</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Button onClick={() => setShowMessages(true)}>Messages</Button>
                     <Button onClick={() => handleOpenModal()} leftIcon={<Plus />}>Add New Item</Button>
                 </div>
             </div>
@@ -140,6 +144,11 @@ const SellerDashboard: React.FC = () => {
                     onSave={handleSaveProduct}
                     product={editingProduct}
                 />
+            )}
+            {showMessages && (
+                <Modal isOpen={true} onClose={() => setShowMessages(false)} title="Messages">
+                    <MessagesScreen />
+                </Modal>
             )}
         </div>
     );
@@ -215,18 +224,17 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
                     <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Location Address</label>
-                    <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Latitude</label>
-                        <input type="number" value={lat} onChange={(e) => setLat(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Longitude</label>
-                        <input type="number" value={lng} onChange={(e) => setLng(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700">Location</label>
+                    <LocationPicker
+                        address={address}
+                        lat={lat}
+                        lng={lng}
+                        onChange={(a, la, lo) => {
+                            setAddress(a);
+                            setLat(la);
+                            setLng(lo);
+                        }}
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Status</label>

@@ -172,3 +172,50 @@ export const getMessages = async (userId: string, otherUserId: string): Promise<
     return [];
   }
 };
+
+export const getMessagesByUser = async (userId: string): Promise<Message[]> => {
+  try {
+    const snap = await getDocs(collection(firestore, 'messages'));
+    return snap.docs
+      .map((d) => d.data() as Message)
+      .filter((m) => m.fromId === userId || m.toId === userId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  } catch (e) {
+    console.error('getMessagesByUser failed', e);
+    return [];
+  }
+};
+
+export const editMessage = async (messageId: string, newText: string): Promise<Message | null> => {
+  try {
+    const ref = doc(firestore, 'messages', messageId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    const data = snap.data() as Message & { history?: string[] };
+    const history = data.history || [];
+    await updateDoc(ref, {
+      text: newText,
+      editedAt: new Date().toISOString(),
+      history: [...history, data.text],
+    });
+    const updated = await getDoc(ref);
+    return updated.data() as Message;
+  } catch (e) {
+    console.error('editMessage failed', e);
+    return null;
+  }
+};
+
+export const deleteMessage = async (messageId: string): Promise<boolean> => {
+  try {
+    const ref = doc(firestore, 'messages', messageId);
+    await updateDoc(ref, {
+      deleted: true,
+      deletedAt: new Date().toISOString(),
+    });
+    return true;
+  } catch (e) {
+    console.error('deleteMessage failed', e);
+    return false;
+  }
+};
