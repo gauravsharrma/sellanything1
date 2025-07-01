@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardProvider, useDashboard } from './contexts/DashboardContext';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import BuyerDashboard from './pages/BuyerDashboard';
 import SellerDashboard from './pages/SellerDashboard';
+import ProductDetailPage from './pages/ProductDetailPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Modal from './components/Modal';
@@ -15,7 +17,9 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <DashboardProvider>
-        <Main />
+        <BrowserRouter>
+          <Main />
+        </BrowserRouter>
       </DashboardProvider>
     </AuthProvider>
   );
@@ -38,7 +42,7 @@ const Main: React.FC = () => {
     setShowDashboardSelect(false);
   };
 
-  const renderContent = useCallback(() => {
+  const renderHome = useCallback(() => {
     if (loading) {
       return <div className="flex items-center justify-center h-screen">Loading...</div>;
     }
@@ -66,14 +70,16 @@ const Main: React.FC = () => {
     }
 
     return currentDashboard === 'BUYER' ? <BuyerDashboard /> : <SellerDashboard />;
-
   }, [loading, isAuthenticated, showDashboardSelect, currentDashboard, user, setCurrentDashboard]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 font-sans">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
-        {renderContent()}
+        <Routes>
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="*" element={renderHome()} />
+        </Routes>
       </main>
       <Footer />
     </div>
