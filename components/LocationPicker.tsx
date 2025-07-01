@@ -34,14 +34,17 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
 
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      console.error('Google Maps API key not provided');
+    const mapId = import.meta.env.VITE_GOOGLE_MAP_ID; // you must set this in .env
+
+    if (!apiKey || !mapId) {
+      console.error('Google Maps API key or Map ID not provided');
       return;
     }
 
     const init = async () => {
       try {
         await loadGoogleMaps(apiKey);
+
         const { Map } = (await window.google.maps.importLibrary('maps')) as google.maps.MapsLibrary;
         const { AdvancedMarkerElement } = (await window.google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
         const { PlaceAutocompleteElement } = (await window.google.maps.importLibrary('places')) as google.maps.PlacesLibrary;
@@ -56,6 +59,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
         const map = new Map(mapRef.current, {
           center,
           zoom: 8,
+          mapId,
         });
 
         const marker = new AdvancedMarkerElement({
@@ -69,7 +73,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
 
         if (address) inputRef.current.value = address;
 
-        autocomplete.addListener('gmp-placechange', () => {
+        autocomplete.addEventListener('gmp-placechange', () => {
           const place = autocomplete.getPlace();
           if (!place?.geometry?.location) return;
 
