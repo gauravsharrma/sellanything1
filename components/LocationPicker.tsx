@@ -46,6 +46,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
     let map: any = null;
     let marker: any = null;
     const init = async () => {
+      try {
       await loadScript(src);
       if (!mapRef.current || !inputRef.current || !window.google?.maps) return;
       // ensure libraries are loaded when using loading=async
@@ -57,6 +58,10 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
         MapClass = window.google.maps.Map;
         MarkerClass = window.google.maps.Marker;
         AutocompleteClass = window.google.maps.places.Autocomplete;
+      }
+      if (!MapClass || !MarkerClass || !AutocompleteClass) {
+        console.error('Google Maps libraries failed to load');
+        return;
       }
       const center = {
         lat: parseFloat(lat || '0') || 0,
@@ -81,6 +86,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
         map!.setCenter(loc);
         marker!.setPosition(loc);
       });
+      } catch (err) {
+        console.error('Failed to initialize Google Maps', err);
+      }
     };
     init();
   }, []);
