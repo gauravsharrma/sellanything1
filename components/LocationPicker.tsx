@@ -42,8 +42,15 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
     const src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
     let map: google.maps.Map | null = null;
     let marker: google.maps.Marker | null = null;
-    loadScript(src).then(() => {
-      if (!mapRef.current || !inputRef.current || !window.google) return;
+    const init = async () => {
+      await loadScript(src);
+      if (!mapRef.current || !inputRef.current || !window.google?.maps) return;
+      // ensure libraries are loaded when using loading=async
+      if (window.google.maps.importLibrary) {
+        await window.google.maps.importLibrary('maps');
+        await window.google.maps.importLibrary('places');
+        await window.google.maps.importLibrary('marker');
+      }
       const center = {
         lat: parseFloat(lat || '0') || 0,
         lng: parseFloat(lng || '0') || 0,
@@ -56,7 +63,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
       if (lat && lng) {
         marker.setPosition(center);
       }
-      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current!);
+      const autocomplete = new window.google.maps.places.Autocomplete(
+        inputRef.current!,
+      );
       if (address) inputRef.current!.value = address;
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
@@ -67,7 +76,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({ address, lat, lng, onCh
         map!.setCenter(loc);
         marker!.setPosition(loc);
       });
-    });
+    };
+    init();
   }, []);
 
   return (
