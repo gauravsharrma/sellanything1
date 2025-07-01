@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Product, User } from '../types';
 import { getUserById } from '../services/firestore';
 import { DollarSign, User as UserIcon } from 'lucide-react';
+import Button from './Button';
 
 interface ProductCardProps {
     product: Product;
+    distanceKm?: number;
+    onMessageSeller?: (sellerId: string, productId: string) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, distanceKm, onMessageSeller }) => {
     const [seller, setSeller] = useState<User | null>(null);
 
     useEffect(() => {
@@ -38,6 +41,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     <DollarSign size={20} className="text-gray-500"/>
                     <span>{product.price.toFixed(2)}</span>
                 </div>
+
+                {product.location && (
+                    <div className="text-sm text-gray-500 mb-2">
+                        <span>{product.location.address}</span>
+                        {distanceKm !== undefined && (
+                            <span className="ml-1">- {distanceKm.toFixed(1)} km away</span>
+                        )}
+                    </div>
+                )}
+
+                {onMessageSeller && (
+                    <Button size="sm" onClick={() => onMessageSeller(product.sellerId, product.id)}>
+                        Message Seller
+                    </Button>
+                )}
 
                 <div className="mt-auto" />
             </div>

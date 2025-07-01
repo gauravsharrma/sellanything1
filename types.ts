@@ -38,6 +38,11 @@ export interface Product {
     price: number;
     currency: string;
     imageUrl: string;
+    location?: {
+        address: string;
+        lat: number;
+        lng: number;
+    };
     status: ProductStatus;
 }
 

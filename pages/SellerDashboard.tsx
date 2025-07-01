@@ -159,6 +159,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
     const [price, setPrice] = useState(product?.price.toString() || '');
     const [imageUrl, setImageUrl] = useState(product?.imageUrl || `https://picsum.photos/seed/${Date.now()}/400/300`);
     const [status, setStatus] = useState<ProductStatus>(product?.status || ProductStatus.DRAFT);
+    const [address, setAddress] = useState(product?.location?.address || '');
+    const [lat, setLat] = useState(product?.location?.lat.toString() || '');
+    const [lng, setLng] = useState(product?.location?.lng.toString() || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -170,6 +173,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
             imageUrl,
             currency: 'USD',
             status,
+            location: address && lat && lng ? { address, lat: parseFloat(lat), lng: parseFloat(lng) } : undefined,
         });
     };
 
@@ -209,6 +213,20 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, on
                         }
                     }} className="mt-1 block w-full" />
                     <input type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="mt-2 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Location Address</label>
+                    <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Latitude</label>
+                        <input type="number" value={lat} onChange={(e) => setLat(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Longitude</label>
+                        <input type="number" value={lng} onChange={(e) => setLng(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
+                    </div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Status</label>
