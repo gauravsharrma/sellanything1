@@ -8,12 +8,6 @@ export enum ProductStatus {
     LIVE = 'live',
 }
 
-export enum OrderStatus {
-    PENDING = 'pending',
-    PAID = 'paid',
-    SHIPPED = 'shipped',
-    DELIVERED = 'delivered',
-}
 
 export const CATEGORIES = [
     'Electronics',
@@ -47,22 +41,6 @@ export interface Product {
     status: ProductStatus;
 }
 
-export interface Order {
-    id: string;
-    buyerId: string;
-    items: { productId: string; price: number }[];
-    purchaseDate: string;
-    status: OrderStatus;
-}
-
-export interface Cart {
-    userId: string;
-    productIds: string[];
-}
-
-export interface CartItem {
-    productId: string;
-}
 
 export interface Message {
     id: string;

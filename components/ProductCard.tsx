@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Product, User } from '../types';
 import { getUserById } from '../services/firestore';
-import Button from './Button';
-import { ShoppingCart, DollarSign, User as UserIcon } from 'lucide-react';
+import { DollarSign, User as UserIcon } from 'lucide-react';
 
 interface ProductCardProps {
     product: Product;
-    onAddToCart: (productId: string) => void;
-    onBuyNow: (productId: string) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onBuyNow }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const [seller, setSeller] = useState<User | null>(null);
 
     useEffect(() => {
@@ -42,14 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onBuyNo
                     <span>{product.price.toFixed(2)}</span>
                 </div>
 
-                <div className="mt-auto grid grid-cols-2 gap-2">
-                    <Button onClick={() => onAddToCart(product.id)} variant="secondary" size="sm" leftIcon={<ShoppingCart size={16} />}>
-                        Add to Cart
-                    </Button>
-                    <Button onClick={() => onBuyNow(product.id)} size="sm">
-                        Buy Now
-                    </Button>
-                </div>
+                <div className="mt-auto" />
             </div>
         </div>
     );
