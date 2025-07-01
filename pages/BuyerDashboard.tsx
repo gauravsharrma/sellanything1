@@ -2,9 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Product } from '../types';
 import { getProducts } from '../services/firestore';
 import ProductCard from '../components/ProductCard';
+import Button from '../components/Button';
 import { Search } from 'lucide-react';
 import Modal from '../components/Modal';
 import MessagingPage from './MessagingPage';
+import MessagesScreen from './MessagesScreen';
 
 const toRad = (value: number) => (value * Math.PI) / 180;
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -28,6 +30,7 @@ const BuyerDashboard: React.FC = () => {
     const [distanceFilter, setDistanceFilter] = useState('all');
     const [userLocation, setUserLocation] = useState<{lat: number; lng: number} | null>(null);
     const [messageInfo, setMessageInfo] = useState<{sellerId: string; productId: string} | null>(null);
+    const [showMessages, setShowMessages] = useState(false);
 
     useEffect(() => {
         const load = async () => {
@@ -84,6 +87,7 @@ const BuyerDashboard: React.FC = () => {
                         <h1 className="text-4xl font-bold text-gray-900">Buyer Dashboard</h1>
                         <p className="text-lg text-gray-600">Discover amazing products.</p>
                     </div>
+                    <Button onClick={() => setShowMessages(true)}>Messages</Button>
                 </div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm mb-6 sticky top-[85px] z-40">
@@ -142,6 +146,11 @@ const BuyerDashboard: React.FC = () => {
             {messageInfo && (
                 <Modal isOpen={true} onClose={() => setMessageInfo(null)} title="Message Seller">
                     <MessagingPage otherUserId={messageInfo.sellerId} productId={messageInfo.productId} />
+                </Modal>
+            )}
+            {showMessages && (
+                <Modal isOpen={true} onClose={() => setShowMessages(false)} title="Messages">
+                    <MessagesScreen />
                 </Modal>
             )}
         </div>
